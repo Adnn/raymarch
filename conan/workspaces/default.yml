@@ -1,0 +1,8 @@
+editables:
+    #upstream/local:
+    #    path: ../../../upstream/conan
+    raymarch/local:
+        path: ../../conan
+layout: layout
+workspace_generator: cmake
+root: raymarch/local
