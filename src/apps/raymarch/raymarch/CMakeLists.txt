@@ -2,7 +2,6 @@ string(TOLOWER ${PROJECT_NAME} _lower_project_name)
 set(TARGET_NAME ${_lower_project_name}_tests)
 
 set(${TARGET_NAME}_HEADERS
-    catch.hpp
 )
 
 set(${TARGET_NAME}_SOURCES
@@ -15,8 +14,6 @@ add_executable(${TARGET_NAME}
 )
 
 target_link_libraries(${TARGET_NAME}
-    PRIVATE
-        ad::raymarch
 )
 
 set_target_properties(${TARGET_NAME} PROPERTIES
