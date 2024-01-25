@@ -13,7 +13,12 @@ add_executable(${TARGET_NAME}
                ${${TARGET_NAME}_SOURCES}
 )
 
+find_package(glad CONFIG REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
+
 target_link_libraries(${TARGET_NAME}
+    glad::glad
+    glfw
 )
 
 set_target_properties(${TARGET_NAME} PROPERTIES

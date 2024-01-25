@@ -21,7 +21,10 @@ class RaymarchConan(ConanFile):
         "visibility": "hidden",
     }
 
-    #requires = ()
+    requires = (
+        "glad/0.1.36",
+        "glfw/3.3.8",
+    )
 
     # Note: It seems conventionnal to add CMake build requirement
     # directly to the build profile.
