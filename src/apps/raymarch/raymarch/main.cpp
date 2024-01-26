@@ -35,7 +35,22 @@ void error_callback(int error, const char* description)
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    {
+        Program & program = *static_cast<Program *>(glfwGetWindowUserPointer(window));
+        try
+        {
+            program = Program{}; // reloads the files
+            std::cout << "Successfully reloaded program." << std::endl;
+        }
+        catch (std::exception & aException)
+        {
+            std::cerr << "Cannot reload program:\n" << aException.what() << "\n";
+        }
+    }
 }
 
 int main(void)
@@ -74,6 +89,8 @@ int main(void)
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
 
     Program program;
+
+    glfwSetWindowUserPointer(window, &program);
 
     glEnableVertexAttribArray(program.vpos_location);
     glVertexAttribPointer(program.vpos_location, 2, GL_FLOAT, GL_FALSE,

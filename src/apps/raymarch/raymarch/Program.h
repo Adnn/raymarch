@@ -57,6 +57,9 @@ void shaderSourceFromFile(GLuint aShader, const std::string & aFilename)
 struct Program
 {
     Program();
+    ~Program();
+
+    void compile();
 
     GLuint vertex_shader, fragment_shader, program;
 
@@ -65,6 +68,22 @@ struct Program
 
 
 inline Program::Program()
+{
+    compile();
+}
+
+Program::~Program()
+{
+    glDetachShader(program, vertex_shader);
+    glDetachShader(program, fragment_shader);
+
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+
+    glDeleteProgram(program);
+}
+
+inline void Program::compile()
 {
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     shaderSourceFromFile(vertex_shader, "trivial.vert");
