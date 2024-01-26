@@ -4,10 +4,12 @@
 
 #include <exception>
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <vector>
 
-#include <cstdlib>
-#include <cstdio>
+
+constexpr double gFpsRefreshPeriod = 0.3;
 
 struct Vertex
 {
@@ -164,7 +166,7 @@ int main(void)
 
     glfwMakeContextCurrent(window);
     gladLoadGL();
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     // NOTE: OpenGL error checks have been omitted for brevity
 
@@ -197,6 +199,10 @@ int main(void)
     glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
                           sizeof(quad[0]), (void*) 0);
 
+    double elapsedSinceRefresh = 0;
+    unsigned int framesSinceRefresh = 0;
+
+    double timePoint = glfwGetTime();
     while (!glfwWindowShouldClose(window))
     {
         GLint width, height;
@@ -211,6 +217,20 @@ int main(void)
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        double now = glfwGetTime();
+        elapsedSinceRefresh += now - timePoint;
+        ++framesSinceRefresh;
+        timePoint = now;
+
+        if(elapsedSinceRefresh >= gFpsRefreshPeriod)
+        {
+            std::ostringstream oss;
+            oss << "Ray marcher (" << framesSinceRefresh/elapsedSinceRefresh << " fps)";
+            glfwSetWindowTitle(window, oss.str().c_str());
+            elapsedSinceRefresh = 0.;
+            framesSinceRefresh = 0;
+        }
     }
 
     glfwDestroyWindow(window);
