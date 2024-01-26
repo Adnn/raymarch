@@ -1,6 +1,8 @@
 string(TOLOWER ${PROJECT_NAME} _lower_project_name)
 set(TARGET_NAME ${_lower_project_name})
 
+configure_file(build.h.in build.h @ONLY)
+
 set(${TARGET_NAME}_HEADERS
     Program.h
 )
@@ -13,6 +15,8 @@ add_executable(${TARGET_NAME}
                ${${TARGET_NAME}_HEADERS}
                ${${TARGET_NAME}_SOURCES}
 )
+
+cmc_target_current_include_directory(${TARGET_NAME} ADD_BINARY_DIR PRIVATE)
 
 find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)

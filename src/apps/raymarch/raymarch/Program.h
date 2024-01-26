@@ -1,94 +1,19 @@
 #pragma once
 
+#include <build.h>
+
 #include <glad/glad.h>
 
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
 
-static const char* vertex_shader_text = R"#(
-#version 420
-
-in vec2 vPos;
-
-void main()
+const std::string getShaderPrefix()
 {
-    gl_Position = vec4(vPos, 0.0, 1.0);
+    return gRepoFolder + std::string{"/src/apps/raymarch/raymarch/shaders/"};
 }
-)#";
-
-static const char* fragment_shader_text = R"#(
-#version 420
-
-float distanceSphere(vec3 p, vec3 c, float r)
-{
-    return length(p - c) - r;
-}
-
-float eval(vec3 p)
-{
-    const vec3 sphere = vec3(0., 0., -3.);
-    const float r = 1;
-
-    return distanceSphere(p, sphere, r);
-}
-
-vec3 getNormal(vec3 p)
-{
-    const vec3 eps = vec3(0.001, 0., 0.);
-
-    return normalize(vec3(
-        eval(p + eps.xyz) - eval(p - eps.xyz),
-        eval(p + eps.yxz) - eval(p - eps.yxz),
-        eval(p + eps.yzx) - eval(p - eps.yzx)
-    ));
-}
-
-out vec4 fragColor;
-
-uniform ivec2 uViewportSize;
-
-const float FAR_PLANE_Z = -50;
-const float MAX_HIT_DISTANCE = 0.001;
-const int MAX_STEPS = 20;
-
-void main()
-{
-    const vec3 camera = vec3(0., 0., 5.);
-
-    vec3 fragmentGridPos = vec3(
-        (gl_FragCoord.xy / uViewportSize) * 2 - 1,
-        0.
-    );
-
-    fragmentGridPos.x *= float(uViewportSize.x) / uViewportSize.y;
-
-    vec3 ray = normalize(fragmentGridPos - camera);
-
-    vec3 currentPos = fragmentGridPos;
-    for (int i = 0; i < MAX_STEPS; ++i)
-    {
-        float closest = eval(currentPos);
-
-        if(closest < MAX_HIT_DISTANCE)
-        {
-            vec3 albedo = vec3(1., 1., 1.);
-
-            float d = max(0., dot(getNormal(currentPos), vec3(-1., 0., 0.5)));
-
-            fragColor = vec4((d * albedo * 0.7 + albedo * 0.3), 1.0);
-            return;
-        }
-
-        currentPos = currentPos + ray * closest;
-
-        if(currentPos.z < FAR_PLANE_Z)
-        {
-            return;
-        }
-    }
-}
-)#";
 
 
 void compileShader(GLuint shader)
@@ -114,6 +39,21 @@ void compileShader(GLuint shader)
 }
 
 
+void shaderSourceFromFile(GLuint aShader, const std::string & aFilename)
+{
+    std::string fullPath = getShaderPrefix() + aFilename;
+    if(!std::filesystem::is_regular_file(fullPath))
+    {
+        throw std::runtime_error{"Not a file: '" + fullPath + "'"};
+    }
+
+    std::ifstream file{fullPath};
+    std::string code{std::istreambuf_iterator<char>{file}, {}};
+    const char * c_code = code.c_str();
+    glShaderSource(aShader, 1, &c_code, NULL);
+}
+
+
 struct Program
 {
     Program();
@@ -127,11 +67,11 @@ struct Program
 inline Program::Program()
 {
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
+    shaderSourceFromFile(vertex_shader, "trivial.vert");
     compileShader(vertex_shader);
 
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
+    shaderSourceFromFile(fragment_shader, "raymarch.frag");
     compileShader(fragment_shader);
 
     program = glCreateProgram();
