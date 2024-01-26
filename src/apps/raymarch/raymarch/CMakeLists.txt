@@ -18,10 +18,12 @@ add_executable(${TARGET_NAME}
 
 cmc_target_current_include_directory(${TARGET_NAME} ADD_BINARY_DIR PRIVATE)
 
+find_package(Math CONFIG REQUIRED COMPONENTS math)
 find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
 target_link_libraries(${TARGET_NAME}
+    ad::math
     glad::glad
     glfw
 )

@@ -1,3 +1,4 @@
+#include "Application.h"
 #include "Program.h"
 
 #include <glad/glad.h>
@@ -13,20 +14,6 @@
 
 constexpr double gFpsRefreshPeriod = 0.3;
 
-struct Vertex
-{
-    float x, y;
-};
-
-const Vertex quad[4] =
-{
-    { -1.f, -1.f },
-    {  1.f, -1.f },
-    { -1.f,  1.f },
-    {  1.f,  1.f },
-};
-
-
 void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
@@ -40,10 +27,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
-        Program & program = *static_cast<Program *>(glfwGetWindowUserPointer(window));
+        Application & app = *static_cast<Application *>(glfwGetWindowUserPointer(window));
         try
         {
-            program = Program{}; // reloads the files
+            app.program = Program{}; // reloads the files
             std::cout << "Successfully reloaded program." << std::endl;
         }
         catch (std::exception & aException)
@@ -56,8 +43,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 int main(void)
 {
     GLFWwindow* window;
-    GLuint vao, vertex_buffer;
-
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
@@ -79,22 +64,8 @@ int main(void)
     gladLoadGL();
     glfwSwapInterval(0);
 
-    // NOTE: OpenGL error checks have been omitted for brevity
-
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
-
-    Program program;
-
-    glfwSetWindowUserPointer(window, &program);
-
-    glEnableVertexAttribArray(program.vpos_location);
-    glVertexAttribPointer(program.vpos_location, 2, GL_FLOAT, GL_FALSE,
-                          sizeof(quad[0]), (void*) 0);
+    Application app;
+    glfwSetWindowUserPointer(window, &app);
 
     double elapsedSinceRefresh = 0;
     unsigned int framesSinceRefresh = 0;
@@ -102,15 +73,7 @@ int main(void)
     double timePoint = glfwGetTime();
     while (!glfwWindowShouldClose(window))
     {
-        GLint width, height;
-
-        glfwGetFramebufferSize(window, &width, &height);
-        glViewport(0, 0, width, height);
-        glUniform2i(program.viewportSize_location, width, height);
-
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        app.draw(window);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

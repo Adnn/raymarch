@@ -22,6 +22,8 @@ class RaymarchConan(ConanFile):
     }
 
     requires = (
+        "math/4c3fcbd2f5@adnn/develop",
+
         "glad/0.1.36",
         "glfw/3.3.8",
     )
