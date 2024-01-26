@@ -1,21 +1,47 @@
 #version 420
 
-float distanceSphere(vec3 p, vec3 c, float r)
+float sphere(vec3 p, float r)
 {
-    return length(p - c) - r;
+    return length(p) - r;
 }
+
+float torus(vec3 p, vec2 t)
+{
+    vec2 q = vec2(length(p.xz) - t.x, p.y);
+    return length(q) - t.y;
+}
+
+float smoothMin(float d1, float d2, float k)
+{
+    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) - k*h*(1.0-h);
+}
+
 
 float eval(vec3 p)
 {
-    const vec3 sphere = vec3(0., 0., -3.);
-    const float r = 1;
+    const float r = 0.7;
+    const vec3 sphere1 = vec3(0.8, 0.8, -3.);
+    const vec3 sphere2 = vec3(-0.8, 0.8, -3.);
 
-    return distanceSphere(p, sphere, r);
+    float s1 = sphere(p - sphere1, r);
+    float s2 = sphere(p - sphere2, r);
+
+    mat3 torusTransform = mat3(
+        1, 0,  0,
+        0, 0, -1,
+        0, 1,  0
+    );
+    const vec3 torus1 = vec3(0.0, 0., -3.);
+    float t1 = torus(torusTransform * (p - torus1), vec2(0.8, 0.4));
+
+    float smoothing = 0.15;
+    return smoothMin(s1, smoothMin(s2, t1, smoothing), smoothing);
 }
 
 vec3 getNormal(vec3 p)
 {
-    const vec3 eps = vec3(0.001, 0., 0.);
+    const vec3 eps = vec3(0.0001, 0., 0.);
 
     return normalize(vec3(
         eval(p + eps.xyz) - eval(p - eps.xyz),
@@ -29,7 +55,7 @@ out vec4 fragColor;
 uniform ivec2 uViewportSize;
 
 const float FAR_PLANE_Z = -50;
-const float MAX_HIT_DISTANCE = 0.001;
+const float MAX_HIT_DISTANCE = 0.0001;
 const int MAX_STEPS = 20;
 
 void main()
