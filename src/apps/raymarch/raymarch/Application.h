@@ -1,10 +1,18 @@
 #pragma once
 
+#include "CameraControl.h"
 #include "Program.h"
+
+#include <math/Matrix.h>
+#include <math/Transformations.h>
 
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+
+
+namespace math = ad::math;
+
 
 struct Vertex
 {
@@ -24,10 +32,12 @@ struct Application
 {
     Application();
 
+    void update(double aTimepoint);
     void draw(GLFWwindow* window);
 
     GLuint vao, vertex_buffer;
     Program program;
+    CameraControl camera;
 };
 
 
@@ -48,6 +58,11 @@ Application::Application()
 }
 
 
+void Application::update(double aTimepoint)
+{
+}
+
+
 void Application::draw(GLFWwindow* window)
 {
     GLint width, height;
@@ -55,6 +70,10 @@ void Application::draw(GLFWwindow* window)
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
     glUniform2i(program.viewportSize_location, width, height);
+
+    math::Matrix<4, 4, float> cameraToWorld =
+        math::trans3d::frameToCanonical(camera.mPose.computeTangentFrame());
+    glUniformMatrix4fv(program.cameraTransform_location, 1, false, cameraToWorld.data());
 
     glClear(GL_COLOR_BUFFER_BIT);
 

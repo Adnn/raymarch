@@ -40,6 +40,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
+
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    Application & app = *static_cast<Application *>(glfwGetWindowUserPointer(window));
+    app.camera.callbackCursorPosition(xpos, ypos);
+}
+
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    Application & app = *static_cast<Application *>(glfwGetWindowUserPointer(window));
+    app.camera.callbackMouseButton(button, action, mods);
+}
+
+
 int main(void)
 {
     GLFWwindow* window;
@@ -59,10 +74,12 @@ int main(void)
     }
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     glfwMakeContextCurrent(window);
     gladLoadGL();
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 
     Application app;
     glfwSetWindowUserPointer(window, &app);
@@ -73,12 +90,13 @@ int main(void)
     double timePoint = glfwGetTime();
     while (!glfwWindowShouldClose(window))
     {
+        double now = glfwGetTime();
+        app.update(now);
         app.draw(window);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        double now = glfwGetTime();
         elapsedSinceRefresh += now - timePoint;
         ++framesSinceRefresh;
         timePoint = now;

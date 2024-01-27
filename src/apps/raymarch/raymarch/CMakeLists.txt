@@ -4,6 +4,8 @@ set(TARGET_NAME ${_lower_project_name})
 configure_file(build.h.in build.h @ONLY)
 
 set(${TARGET_NAME}_HEADERS
+    Application.h
+    CameraControl.h
     Program.h
 )
 

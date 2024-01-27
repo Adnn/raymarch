@@ -63,7 +63,7 @@ struct Program
 
     GLuint vertex_shader, fragment_shader, program;
 
-    GLuint viewportSize_location, vpos_location;
+    GLuint viewportSize_location, vpos_location, cameraTransform_location;
 };
 
 
@@ -99,7 +99,8 @@ inline void Program::compile()
     glLinkProgram(program);
     glUseProgram(program); // single program
 
-    viewportSize_location = glGetUniformLocation(program, "uViewportSize");
-
     vpos_location = glGetAttribLocation(program, "vPos");
+
+    viewportSize_location = glGetUniformLocation(program, "uViewportSize");
+    cameraTransform_location = glGetUniformLocation(program, "uCameraToWorld");
 }
