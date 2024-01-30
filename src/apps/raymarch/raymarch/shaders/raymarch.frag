@@ -50,6 +50,13 @@ vec3 getNormal(vec3 p)
     ));
 }
 
+
+vec3 correctGamma(vec3 linear)
+{
+    const float gamma = 2.2;
+    return pow(linear, vec3(1.0/gamma));
+}
+
 out vec4 fragColor;
 
 uniform ivec2 uViewportSize;
@@ -85,7 +92,7 @@ void main()
             vec3 albedo = vec3(1., 1., 1.);
             float d = max(0., dot(getNormal(currentPos), -lightDir));
 
-            fragColor = vec4((d * albedo * 0.7 + albedo * 0.3), 1.0);
+            fragColor = vec4(correctGamma(d * albedo * 0.8 + albedo * 0.2), 1.0);
             return;
         }
 
