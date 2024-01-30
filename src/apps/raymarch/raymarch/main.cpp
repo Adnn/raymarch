@@ -55,6 +55,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    Application & app = *static_cast<Application *>(glfwGetWindowUserPointer(window));
+    app.camera.callbackScroll(xoffset, yoffset);
+}
+
+
 int main(void)
 {
     GLFWwindow* window;
@@ -76,6 +83,7 @@ int main(void)
     glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     glfwMakeContextCurrent(window);
     gladLoadGL();

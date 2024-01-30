@@ -7,6 +7,8 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include <algorithm>
+
 namespace math = ad::math;
 
 
@@ -14,6 +16,7 @@ struct CameraControl
 {
     void callbackCursorPosition(double xpos, double ypos);
     void callbackMouseButton(int button, int action, int mods);
+    void callbackScroll(double xoffset, double yoffset);
 
     enum class ControlMode
     {
@@ -25,6 +28,7 @@ struct CameraControl
     ControlMode mControlMode = ControlMode::None;
     math::Position<2, float> mPreviousDragPosition;
     static constexpr math::Vec<2, float> gMouseControlFactor = {1.f/400, 1.f/400};
+    static constexpr float gScrollFactor = 0.01f;
 };
 
 
@@ -73,4 +77,10 @@ void CameraControl::callbackMouseButton(int button, int action, int mods)
     {
         mControlMode = ControlMode::None;
     }
+}
+
+
+void CameraControl::callbackScroll(double xoffset, double yoffset)
+{
+    mPose.radius() *= 1 - ((float)yoffset * gScrollFactor); 
 }
