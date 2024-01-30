@@ -1,5 +1,16 @@
 #version 420
 
+out vec4 fragColor;
+
+uniform ivec2 uViewportSize;
+uniform mat4 uCameraToWorld;
+
+layout(std140) uniform SphereTransforms
+{
+    mat4 worldToLocal[8];
+    uint sphereCount;
+};
+
 float sphere(vec3 p, float r)
 {
     return length(p) - r;
@@ -17,7 +28,7 @@ float smoothMin(float d1, float d2, float k)
     return mix( d2, d1, h ) - k*h*(1.0-h);
 }
 
-float eval(vec3 p)
+float eval_bkp(vec3 p)
 {
     const float r = 0.7;
     const vec3 sphere1 = vec3(0.8, 0.8, 0.);
@@ -39,6 +50,22 @@ float eval(vec3 p)
     return smoothMin(s1, smoothMin(s2, t1, smoothing), smoothing);
 }
 
+
+float eval(vec3 p)
+{
+    const float smoothing = 0.15;
+    const float r = 0.8;
+
+    float d0 = 100.;
+    for(int sIdx = 0; sIdx < sphereCount; ++sIdx)
+    {
+        vec3 p_local = (worldToLocal[sIdx] * vec4(p, 1.0)).xyz;
+        float d = sphere(p_local, r);
+        d0 = smoothMin(d0, d, smoothing);
+    }
+    return d0;
+}
+
 vec3 getNormal(vec3 p)
 {
     const vec3 eps = vec3(0.0001, 0., 0.);
@@ -56,11 +83,6 @@ vec3 correctGamma(vec3 linear)
     const float gamma = 2.2;
     return pow(linear, vec3(1.0/gamma));
 }
-
-out vec4 fragColor;
-
-uniform ivec2 uViewportSize;
-uniform mat4 uCameraToWorld;
 
 const float FAR_PLANE_Z = -50;
 const float MAX_HIT_DISTANCE = 0.001;

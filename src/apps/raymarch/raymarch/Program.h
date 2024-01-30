@@ -64,12 +64,22 @@ struct Program
     GLuint vertex_shader, fragment_shader, program;
 
     GLuint viewportSize_location, vpos_location, cameraTransform_location;
+
+    static constexpr GLuint gSphereTransformBindingLocation = 1;
 };
 
 
 inline Program::Program()
 {
     compile();
+
+    vpos_location = glGetAttribLocation(program, "vPos");
+
+    viewportSize_location = glGetUniformLocation(program, "uViewportSize");
+    cameraTransform_location = glGetUniformLocation(program, "uCameraToWorld");
+
+    GLuint blockIdx = glGetUniformBlockIndex(program, "SphereTransforms");
+    glUniformBlockBinding(program, blockIdx, gSphereTransformBindingLocation);
 }
 
 Program::~Program()
@@ -98,9 +108,4 @@ inline void Program::compile()
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
     glUseProgram(program); // single program
-
-    vpos_location = glGetAttribLocation(program, "vPos");
-
-    viewportSize_location = glGetUniformLocation(program, "uViewportSize");
-    cameraTransform_location = glGetUniformLocation(program, "uCameraToWorld");
 }
