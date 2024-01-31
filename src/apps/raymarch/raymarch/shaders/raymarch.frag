@@ -11,6 +11,21 @@ layout(std140) uniform SphereTransforms
     uint sphereCount;
 };
 
+
+float smoothMin(float d1, float d2, float k)
+{
+    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) - k*h*(1.0-h);
+}
+
+// A smooth intersection
+float smoothMax(float d1, float d2, float k)
+{
+    float h = clamp( 0.5 - 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) + k*h*(1.0-h);
+}
+
+
 //
 // 2D Perlin noise
 //
@@ -154,6 +169,31 @@ float cnoise3(vec3 P)
 }
 
 
+//
+// fBM
+//
+float sdFbm(vec3 p, float d, float s = 1)
+{
+   const int octaves = 8;
+   for( int i=0; i<octaves; i++ )
+   {
+       // evaluate new octave
+       float n = s * cnoise3(p);
+
+       // add
+       n = smoothMax(n, d-0.01*s, 0.3*s);
+       d = smoothMin(n, d, 0.3*s);
+
+       // prepare next octave
+       p = mat3( 0.00, 1.60, 1.20,
+                -1.60, 0.72,-0.96,
+                -1.20,-0.96, 1.28 )*p;
+       s = 0.5*s;
+   }
+   return d;
+}
+
+
 float sphere(vec3 p, float r)
 {
     return length(p) - r;
@@ -163,12 +203,6 @@ float torus(vec3 p, vec2 t)
 {
     vec2 q = vec2(length(p.xz) - t.x, p.y);
     return length(q) - t.y;
-}
-
-float smoothMin(float d1, float d2, float k)
-{
-    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
-    return mix( d2, d1, h ) - k*h*(1.0-h);
 }
 
 float eval_bkp(vec3 p)
@@ -193,7 +227,7 @@ float eval_bkp(vec3 p)
     return smoothMin(s1, smoothMin(s2, t1, smoothing), smoothing);
 }
 
-float eval(vec3 p)
+float eval_b(vec3 p)
 {
     const float smoothing = 0.15;
     const float r = 0.8;
@@ -209,14 +243,15 @@ float eval(vec3 p)
     return d0;
 }
 
-float eval_static(vec3 p)
+float eval(vec3 p)
 {
     const float smoothing = 0.15;
     const float r = 1.5;
 
     float d = sphere(p, r);
     //return smoothMin(d, d + 0.03 * cnoise3(p * 20.), 0.01);
-    return max(d, d + 0.03 * cnoise3(p * 20.));
+    //return max(d, d + 0.03 * cnoise3(p * 20.));
+    return sdFbm(p, d);
 }
 
 vec3 getNormal(vec3 p)
