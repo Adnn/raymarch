@@ -272,9 +272,9 @@ vec3 correctGamma(vec3 linear)
     return pow(linear, vec3(1.0/gamma));
 }
 
-const float FAR_PLANE_Z = -50;
+const float MAX_RAY_LENGTH = 50;
 const float MAX_HIT_DISTANCE = 0.001;
-const int MAX_STEPS = 100;
+const int MAX_STEPS = 200;
 
 
 void main()
@@ -291,11 +291,13 @@ void main()
     // Correct for aspect ratio
     fragmentGridPos_cam.x *= float(uViewportSize.x) / uViewportSize.y;
 
-    vec3 ray = normalize((uCameraToWorld * vec4(fragmentGridPos_cam - camera_cam, 0.)).xyz);
+    const vec3 ray = normalize((uCameraToWorld * vec4(fragmentGridPos_cam - camera_cam, 0.)).xyz);
+    const vec3 rayOrigin = (uCameraToWorld * vec4(camera_cam, 1.)).xyz;
 
-    vec3 currentPos = (uCameraToWorld * vec4(camera_cam, 1.)).xyz;
+    float distance = 0;
     for (int i = 0; i < MAX_STEPS; ++i)
     {
+        vec3 currentPos = rayOrigin + ray * distance;
         float closest = eval(currentPos);
 
         if(closest < MAX_HIT_DISTANCE)
@@ -307,11 +309,12 @@ void main()
             return;
         }
 
-        currentPos = currentPos + ray * closest;
-
-        if(currentPos.z < FAR_PLANE_Z)
+        distance += closest;
+        if(distance > MAX_RAY_LENGTH)
         {
+            //fragColor = vec4(0.0, 1.0, 0.0, 1.0);
             return;
         }
     }
+    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
