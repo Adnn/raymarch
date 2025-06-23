@@ -195,7 +195,7 @@ float sph( ivec3 i, vec3 f, ivec3 c )
    float rad = hash(vec3(i+c));
    //float rad = 0.3;
    // distance to sphere at grid vertex i+c
-   return length(f-vec3(c)) - rad; 
+   return length(f-vec3(c)) - rad;
 }
 
 float sdBase(vec3 p)
@@ -252,10 +252,10 @@ float eval_bkp(vec3 p)
     const float r = 0.7;
     const vec3 sphere1 = vec3(0.8, 0.8, 0.);
     const vec3 sphere2 = vec3(-0.8, 0.8, 0.);
-  
+
     float s1 = sphere(p - sphere1, r);
     float s2 = sphere(p - sphere2, r);
-  
+
     // Rotate 90° around X
     mat3 torusTransform = mat3(
         1, 0,  0,
@@ -264,7 +264,7 @@ float eval_bkp(vec3 p)
     );
     const vec3 torus1 = vec3(0.0, 0., 0.);
     float t1 = torus(torusTransform * (p - torus1), vec2(0.8, 0.4));
-  
+
     float smoothing = 0.15;
     return smoothMin(s1, smoothMin(s2, t1, smoothing), smoothing);
 }
@@ -364,7 +364,10 @@ void main()
         distance += closest;
         if(distance > MAX_RAY_LENGTH)
         {
-            //fragColor = vec4(0.0, 1.0, 0.0, 1.0);
+            float h = (fragmentGridPos_cam.y + 1) / 2;
+            fragColor =
+                (1 - h) * vec4(0.81f, 0.42f, 0.12f, 1f)
+                + h * vec4(0, 0.11f, 0.35f, 1);
             return;
         }
     }
