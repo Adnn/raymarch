@@ -172,16 +172,58 @@ float cnoise3(vec3 P)
 //
 // fBM
 //
+// see: https://www.shadertoy.com/view/4djSRW
+float hash13(vec3 p3)
+{
+	p3  = fract(p3 * .1031);
+    p3 += dot(p3, p3.zyx + 31.32);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+
+float hash(vec3 ipc)
+{
+    vec3  p = 17.0*fract( (ipc)*0.3183099+vec3(0.11,0.17,0.13) );
+    float w = fract( p.x*p.y*p.z*(p.x+p.y+p.z) );
+    return 0.7*w*w;
+}
+
+float sph( ivec3 i, vec3 f, ivec3 c )
+{
+   // random radius at grid vertex i+c
+   //float rad = 0.6 * hash13(vec3(i+c));
+   float rad = hash(vec3(i+c));
+   //float rad = 0.3;
+   // distance to sphere at grid vertex i+c
+   return length(f-vec3(c)) - rad; 
+}
+
+float sdBase(vec3 p)
+{
+   ivec3 i = ivec3(floor(p));
+    vec3 f =       fract(p);
+   // distance to the 8 corners spheres
+   return min(min(min(sph(i,f,ivec3(0,0,0)),
+                      sph(i,f,ivec3(0,0,1))),
+                  min(sph(i,f,ivec3(0,1,0)),
+                      sph(i,f,ivec3(0,1,1)))),
+              min(min(sph(i,f,ivec3(1,0,0)),
+                      sph(i,f,ivec3(1,0,1))),
+                  min(sph(i,f,ivec3(1,1,0)),
+                      sph(i,f,ivec3(1,1,1)))));
+}
+
 float sdFbm(vec3 p, float d, float s = 1)
 {
    const int octaves = 8;
    for( int i=0; i<octaves; i++ )
    {
        // evaluate new octave
-       float n = s * cnoise3(p);
+       //float n = s * cnoise3(p);
+       float n = s * sdBase(p);
 
        // add
-       n = smoothMax(n, d-0.01*s, 0.3*s);
+       n = smoothMax(n, d-0.1*s, 0.3*s);
        d = smoothMin(n, d, 0.3*s);
 
        // prepare next octave
@@ -227,9 +269,16 @@ float eval_bkp(vec3 p)
     return smoothMin(s1, smoothMin(s2, t1, smoothing), smoothing);
 }
 
-float eval_b(vec3 p)
+float eval_b2(vec3 p)
+//float eval(vec3 p)
 {
-    const float smoothing = 0.15;
+    return sdBase(p);
+}
+
+//float eval_b3(vec3 p)
+float eval(vec3 p)
+{
+    const float smoothing = 0.1;
     const float r = 0.8;
 
     float d0 = 100;
@@ -237,13 +286,16 @@ float eval_b(vec3 p)
     {
         vec3 p_local = (worldToLocal[sIdx] * vec4(p, 1.0)).xyz;
         float d = sphere(p_local, r);
-        d = max(d, d + 0.02 * cnoise3(p_local * 20.));
+        //d = sdFbm(p, d);
+        //d = max(d, d + 0.02 * cnoise3(p_local * 20.));
         d0 = smoothMin(d0, d, smoothing);
     }
+    d0 = sdFbm(p, d0);
     return d0;
 }
 
-float eval(vec3 p)
+float eval_b4(vec3 p)
+//float eval(vec3 p)
 {
     const float smoothing = 0.15;
     const float r = 1.5;
@@ -251,7 +303,7 @@ float eval(vec3 p)
     float d = sphere(p, r);
     //return smoothMin(d, d + 0.03 * cnoise3(p * 20.), 0.01);
     //return max(d, d + 0.03 * cnoise3(p * 20.));
-    return sdFbm(p, d);
+    return sdFbm(p, d, 1);
 }
 
 vec3 getNormal(vec3 p)
